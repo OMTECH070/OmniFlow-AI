@@ -1,27 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>OmniFlow AI</title>
+
     <link rel="stylesheet" href="popup.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
 
-<h2>OmniFlow AI</h2>
+<div class="card">
 
-<input
-type="text"
-id="question"
-placeholder="Ask something..."
->
+    <div class="header">
 
-<button id="sendBtn">
-Send
-</button>
+        <div class="logo">
+            🤖
+        </div>
 
-<p id="response"></p>
+        <div>
+
+            <h1>OmniFlow AI</h1>
+
+            <p>Your Intelligent Browser Assistant</p>
+
+        </div>
+
+    </div>
+
+    <div class="status">
+
+        <span class="dot"></span>
+
+        AI Online
+
+    </div>
+
+    <textarea
+        id="prompt"
+        placeholder="Ask anything..."
+    ></textarea>
+
+    <button id="sendBtn">
+
+        ✨ Ask AI
+
+    </button>
+
+    <div id="loading"></div>
+
+    <div id="response">
+
+        <h3>Response</h3>
+
+        <p>Your AI response will appear here.</p>
+
+    </div>
+
+</div>
 
 <script src="popup.js"></script>
 
 </body>
+
 </html>
