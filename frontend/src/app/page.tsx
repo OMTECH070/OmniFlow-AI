@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import ChatBox from "../components/chat/ChatBox";
 
 export default function Home() {
@@ -32,6 +33,19 @@ export default function Home() {
         <main className="flex-1 p-6">
           <ChatBox />
         </main>
+=======
+import { Sidebar } from "@/components/layout/Sidebar";
+import { Navbar } from "@/components/layout/Navbar";
+import { ChatBox } from "@/components/chat/ChatBox";
+
+export default function Home() {
+  return (
+    <div className="flex h-dvh w-full overflow-hidden bg-surface-0">
+      <Sidebar />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Navbar />
+        <ChatBox />
+>>>>>>> 90d3ae651409440a0c8d21803236f981d00285dc
       </div>
     </div>
   );
