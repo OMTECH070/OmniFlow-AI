@@ -20,7 +20,7 @@ function SidebarContent() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-2.5 px-4 pt-5 pb-4">
-        <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-[linear-gradient(135deg,var(--color-accent-start),var(--color-accent-end))] shadow-[0_6px_16px_-6px_rgba(124,111,255,0.7)]">
+        <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-[linear-gradient(135deg,var(--color-accent-start),var(--color-accent-end))] shadow-[0_6px_16px_-6px_rgba(127,29,29,0.55)]">
           <Sparkles className="h-4 w-4 text-white" strokeWidth={2.25} />
         </span>
         <div className="leading-tight">
@@ -46,7 +46,7 @@ function SidebarContent() {
             className={cn(
               "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
               item.active
-                ? "bg-surface-2 text-text-primary"
+                ? "bg-surface-1 text-text-primary neu-raised-sm"
                 : "text-text-tertiary hover:bg-surface-2/60 hover:text-text-secondary"
             )}
           >
@@ -70,7 +70,7 @@ function SidebarContent() {
       </div>
 
       <div className="flex items-center gap-2.5 border-t border-border px-4 py-3.5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold text-text-secondary">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-accent-start),var(--color-accent-end))] text-xs font-semibold text-white">
           AK
         </div>
         <div className="leading-tight">
@@ -96,7 +96,7 @@ export function Sidebar() {
         {sidebarOpen && (
           <>
             <motion.div
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}

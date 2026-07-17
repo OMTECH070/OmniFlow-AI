@@ -5,7 +5,7 @@ import { Menu, Moon, Sun } from "lucide-react";
 import { useChat, useChatStore } from "@/hooks/useChat";
 
 function useTheme() {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     const stored = window.localStorage.getItem("omniflow-theme");
@@ -53,13 +53,13 @@ export function Navbar() {
       <button
         type="button"
         onClick={toggle}
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-2"
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-2 neu-raised-sm"
         aria-label="Toggle dark mode"
       >
         {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </button>
 
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold text-text-secondary">
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-accent-start),var(--color-accent-end))] text-xs font-semibold text-white">
         AK
       </div>
     </header>

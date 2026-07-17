@@ -1,6 +1,5 @@
 export type MessageRole = "user" | "assistant";
-
-export type MessageStatus = "sending" | "sent" | "error";
+export type MessageStatus = "sending" | "sent";
 
 export interface ChatMessage {
   id: string;
@@ -13,13 +12,6 @@ export interface ChatMessage {
 export interface ChatSession {
   id: string;
   title: string;
-  createdAt: string;
   updatedAt: string;
   messages: ChatMessage[];
-}
-
-export interface SendMessageResult {
-  userMessage: ChatMessage;
-  assistantMessage: ChatMessage;
-  session: ChatSession;
 }
