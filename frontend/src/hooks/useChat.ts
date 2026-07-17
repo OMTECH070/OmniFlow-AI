@@ -1,161 +1,214 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useCallback } from "react";
 import { create } from "zustand";
 import { chatService } from "@/services/chatService";
-import type { ChatMessage, ChatSession } from "@/types/chat";
+import { generateId } from "@/lib/utils";
+import { ChatMessage, ChatSession } from "@/types/chat";
 
-interface ChatState {
+interface ChatStoreState {
   sessions: ChatSession[];
   activeSessionId: string | null;
   isLoadingSessions: boolean;
   isSending: boolean;
   isTyping: boolean;
   sidebarOpen: boolean;
-  error: string | null;
 
-  init: () => Promise<void>;
-  selectSession: (id: string) => void;
-  newChat: () => Promise<void>;
-  deleteSession: (id: string) => Promise<void>;
-  sendMessage: (content: string) => Promise<void>;
+  setSessions: (sessions: ChatSession[]) => void;
+  setActiveSessionId: (id: string | null) => void;
+  addSession: (session: ChatSession) => void;
+  removeSession: (id: string) => void;
+  appendMessage: (sessionId: string, message: ChatMessage) => void;
+  updateMessageStatus: (
+    sessionId: string,
+    messageId: string,
+    status: ChatMessage["status"]
+  ) => void;
+  setLoadingSessions: (value: boolean) => void;
+  setSending: (value: boolean) => void;
+  setTyping: (value: boolean) => void;
   toggleSidebar: () => void;
+  openSidebar: () => void;
   closeSidebar: () => void;
 }
 
-export const useChatStore = create<ChatState>((set, get) => ({
+/**
+ * Single store backing all chat state (sessions, active session,
+ * loading/sending flags, and sidebar visibility). Components read
+ * this directly via `useChatStore` for UI-only state (e.g. Navbar's
+ * sidebar toggle), while `useChat()` below composes it with
+ * `chatService` for anything that needs a mock network round trip.
+ */
+export const useChatStore = create<ChatStoreState>((set) => ({
   sessions: [],
   activeSessionId: null,
   isLoadingSessions: true,
   isSending: false,
   isTyping: false,
   sidebarOpen: false,
-  error: null,
 
-  init: async () => {
-    set({ isLoadingSessions: true, error: null });
-    try {
-      const sessions = await chatService.getSessions();
-      set({
-        sessions,
-        activeSessionId: sessions[0]?.id ?? null,
-        isLoadingSessions: false,
-      });
-    } catch {
-      set({
-        isLoadingSessions: false,
-        error: "Couldn't load your conversations. Try refreshing.",
-      });
-    }
-  },
+  setSessions: (sessions) =>
+    set({ sessions, activeSessionId: sessions[0]?.id ?? null }),
 
-  selectSession: (id) => {
-    set({ activeSessionId: id, sidebarOpen: false });
-  },
+  setActiveSessionId: (id) => set({ activeSessionId: id }),
 
-  newChat: async () => {
-    const session = await chatService.createSession();
+  addSession: (session) =>
     set((state) => ({
       sessions: [session, ...state.sessions],
       activeSessionId: session.id,
-      sidebarOpen: false,
-    }));
-  },
+    })),
 
-  deleteSession: async (id) => {
-    await chatService.deleteSession(id);
+  removeSession: (id) =>
     set((state) => {
-      const remaining = state.sessions.filter((s) => s.id !== id);
-      const wasActive = state.activeSessionId === id;
-      return {
-        sessions: remaining,
-        activeSessionId: wasActive ? remaining[0]?.id ?? null : state.activeSessionId,
-      };
-    });
-  },
+      const sessions = state.sessions.filter((s) => s.id !== id);
+      const activeSessionId =
+        state.activeSessionId === id
+          ? sessions[0]?.id ?? null
+          : state.activeSessionId;
+      return { sessions, activeSessionId };
+    }),
 
-  sendMessage: async (content) => {
-    const trimmed = content.trim();
-    if (!trimmed) return;
-
-    let { activeSessionId } = get();
-    if (!activeSessionId) {
-      const session = await chatService.createSession();
-      set((state) => ({
-        sessions: [session, ...state.sessions],
-        activeSessionId: session.id,
-      }));
-      activeSessionId = session.id;
-    }
-
-    const sessionId = activeSessionId;
-
+  appendMessage: (sessionId, message) =>
     set((state) => ({
-      isSending: true,
-      isTyping: true,
-      sessions: state.sessions.map((s) =>
-        s.id === sessionId
+      sessions: state.sessions.map((session) =>
+        session.id === sessionId
           ? {
-              ...s,
-              messages: [
-                ...s.messages,
-                {
-                  id: `optimistic_${Date.now()}`,
-                  role: "user" as const,
-                  content: trimmed,
-                  timestamp: new Date().toISOString(),
-                  status: "sending" as const,
-                },
-              ],
+              ...session,
+              messages: [...session.messages, message],
+              updatedAt: message.timestamp,
             }
-          : s
+          : session
       ),
-    }));
+    })),
 
-    try {
-      const { session } = await chatService.sendMessage(sessionId, trimmed);
-      set((state) => ({
-        isSending: false,
-        isTyping: false,
-        sessions: state.sessions.map((s) => (s.id === sessionId ? session : s)),
-      }));
-    } catch {
-      set({ isSending: false, isTyping: false, error: "Message failed to send." });
-    }
-  },
+  updateMessageStatus: (sessionId, messageId, status) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) =>
+        session.id === sessionId
+          ? {
+              ...session,
+              messages: session.messages.map((m) =>
+                m.id === messageId ? { ...m, status } : m
+              ),
+            }
+          : session
+      ),
+    })),
+
+  setLoadingSessions: (value) => set({ isLoadingSessions: value }),
+  setSending: (value) => set({ isSending: value }),
+  setTyping: (value) => set({ isTyping: value }),
 
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  openSidebar: () => set({ sidebarOpen: true }),
   closeSidebar: () => set({ sidebarOpen: false }),
 }));
 
 export function useChat() {
-  const {
-    sessions,
-    activeSessionId,
-    isLoadingSessions,
-    isSending,
-    isTyping,
-    error,
-    init,
-    selectSession,
-    newChat,
-    deleteSession,
-    sendMessage,
-  } = useChatStore();
+  const sessions = useChatStore((s) => s.sessions);
+  const activeSessionId = useChatStore((s) => s.activeSessionId);
+  const isLoadingSessions = useChatStore((s) => s.isLoadingSessions);
+  const isSending = useChatStore((s) => s.isSending);
+  const isTyping = useChatStore((s) => s.isTyping);
+
+  const setSessions = useChatStore((s) => s.setSessions);
+  const setActiveSessionId = useChatStore((s) => s.setActiveSessionId);
+  const addSession = useChatStore((s) => s.addSession);
+  const removeSession = useChatStore((s) => s.removeSession);
+  const appendMessage = useChatStore((s) => s.appendMessage);
+  const updateMessageStatus = useChatStore((s) => s.updateMessageStatus);
+  const setLoadingSessions = useChatStore((s) => s.setLoadingSessions);
+  const setSending = useChatStore((s) => s.setSending);
+  const setTyping = useChatStore((s) => s.setTyping);
+  const closeSidebar = useChatStore((s) => s.closeSidebar);
 
   useEffect(() => {
-    if (sessions.length === 0) {
-      void init();
-    }
+    let mounted = true;
+    setLoadingSessions(true);
+    chatService
+      .fetchSessions()
+      .then((data) => {
+        if (mounted) setSessions(data);
+      })
+      .finally(() => {
+        if (mounted) setLoadingSessions(false);
+      });
+    return () => {
+      mounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const activeSession = useMemo(
-    () => sessions.find((s) => s.id === activeSessionId) ?? null,
-    [sessions, activeSessionId]
+  const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null;
+  const messages = activeSession?.messages ?? [];
+
+  const newChat = useCallback(async () => {
+    const session = await chatService.createSession();
+    addSession(session);
+    closeSidebar();
+  }, [addSession, closeSidebar]);
+
+  const selectSession = useCallback(
+    (id: string) => {
+      setActiveSessionId(id);
+      closeSidebar();
+    },
+    [setActiveSessionId, closeSidebar]
   );
 
-  const messages: ChatMessage[] = activeSession?.messages ?? [];
+  const deleteSession = useCallback(
+    async (id: string) => {
+      await chatService.deleteSession(id);
+      removeSession(id);
+    },
+    [removeSession]
+  );
+
+  const sendMessage = useCallback(
+    async (content: string) => {
+      if (!content.trim()) return;
+
+      // Lazily create a session if the user starts typing before one exists.
+      let sessionId = activeSessionId;
+      if (!sessionId) {
+        const session = await chatService.createSession();
+        addSession(session);
+        sessionId = session.id;
+      }
+
+      const userMessage: ChatMessage = {
+        id: generateId(),
+        role: "user",
+        content: content.trim(),
+        timestamp: new Date().toISOString(),
+        status: "sending",
+      };
+      appendMessage(sessionId, userMessage);
+      setSending(true);
+
+      // Small delay before showing the typing indicator so it doesn't
+      // flash for instant mock responses.
+      const typingDelay = setTimeout(() => setTyping(true), 300);
+
+      try {
+        const reply = await chatService.sendMessage(sessionId, content);
+        updateMessageStatus(sessionId, userMessage.id, "sent");
+        appendMessage(sessionId, reply);
+      } finally {
+        clearTimeout(typingDelay);
+        setTyping(false);
+        setSending(false);
+      }
+    },
+    [
+      activeSessionId,
+      addSession,
+      appendMessage,
+      setSending,
+      setTyping,
+      updateMessageStatus,
+    ]
+  );
 
   return {
     sessions,
@@ -164,10 +217,9 @@ export function useChat() {
     isLoadingSessions,
     isSending,
     isTyping,
-    error,
-    selectSession,
-    newChat,
-    deleteSession,
     sendMessage,
+    newChat,
+    selectSession,
+    deleteSession,
   };
 }

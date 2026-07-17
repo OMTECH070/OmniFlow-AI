@@ -1,20 +1,3 @@
-<<<<<<< HEAD
-import React from "react";
-
-export default function ChatMessage({ role, text }: { role: string; text: string }) {
-	const isAssistant = role === "assistant";
-	return (
-		<div className={`mb-4 ${isAssistant ? "text-left" : "text-right"}`}>
-			<div className={`inline-block max-w-[70%] p-4 rounded-lg ${isAssistant ? "bg-white/6" : "bg-[var(--accent)] text-white"}`}>
-				{text.split('\n').map((line, i) => (
-					<p key={i} className="text-sm leading-6">{line}</p>
-				))}
-			</div>
-		</div>
-	);
-}
-
-=======
 "use client";
 
 import { motion } from "framer-motion";
@@ -55,7 +38,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
             "rounded-2xl px-4 py-2.5 text-[13.5px] leading-relaxed shadow-sm",
             isUser
               ? "rounded-tr-sm bg-[linear-gradient(135deg,var(--color-accent-start),var(--color-accent-end))] text-white"
-              : "rounded-tl-sm border border-border bg-surface-1 text-text-primary",
+              : "rounded-tl-sm border border-border bg-surface-1 text-text-primary neu-raised-sm",
             message.status === "sending" && "opacity-70"
           )}
         >
@@ -71,4 +54,3 @@ export function ChatMessage({ message }: ChatMessageProps) {
     </motion.div>
   );
 }
->>>>>>> 90d3ae651409440a0c8d21803236f981d00285dc

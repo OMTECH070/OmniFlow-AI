@@ -11,9 +11,9 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    "bg-[linear-gradient(135deg,var(--color-accent-start),var(--color-accent-end))] text-white shadow-[0_1px_0_0_rgba(255,255,255,0.15)_inset,0_8px_20px_-8px_rgba(124,111,255,0.65)] hover:brightness-110 active:brightness-95",
-  secondary: "bg-surface-2 text-text-primary border border-border hover:bg-surface-3",
-  ghost: "bg-transparent text-text-secondary hover:bg-surface-2 hover:text-text-primary",
+    "bg-[linear-gradient(135deg,var(--color-accent-start),var(--color-accent-end))] text-white shadow-[0_1px_0_0_rgba(255,255,255,0.15)_inset,0_8px_20px_-8px_rgba(127,29,29,0.55)] hover:brightness-110 active:brightness-95",
+  secondary: "bg-surface-2 text-text-primary border border-border neu-raised-sm hover:brightness-95",
+  ghost: "bg-transparent text-text-secondary hover:bg-surface-2",
   outline: "bg-transparent border border-border text-text-primary hover:bg-surface-2",
   danger: "bg-transparent text-danger border border-danger/30 hover:bg-danger/10",
 };
@@ -31,9 +31,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center font-medium transition-all duration-150",
-          "disabled:opacity-50 disabled:pointer-events-none",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-start/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-0",
+          "inline-flex items-center justify-center font-medium transition-all duration-150 neu-pressable",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent-end/60",
           variantClasses[variant],
           sizeClasses[size],
           className
