@@ -7,3 +7,4 @@ pydantic
 python-dotenv
 playwright
 requests
+google-generativeai
