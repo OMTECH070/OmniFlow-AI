@@ -17,6 +17,7 @@ interface ChatStoreState {
   sessions: ChatSession[];
   activeSessionId: string | null;
   isLoadingSessions: boolean;
+  hasLoadedSessions: boolean;
   isSending: boolean;
   isTyping: boolean;
   sidebarOpen: boolean;
@@ -34,6 +35,7 @@ interface ChatStoreState {
     status: ChatMessage["status"]
   ) => void;
   setLoadingSessions: (value: boolean) => void;
+  setHasLoadedSessions: (value: boolean) => void;
   setSending: (value: boolean) => void;
   setTyping: (value: boolean) => void;
   toggleSidebar: () => void;
@@ -47,6 +49,7 @@ export const useChatStore = create<ChatStoreState>((set) => ({
   sessions: [],
   activeSessionId: null,
   isLoadingSessions: true,
+  hasLoadedSessions: false,
   isSending: false,
   isTyping: false,
   sidebarOpen: false,
@@ -103,6 +106,7 @@ export const useChatStore = create<ChatStoreState>((set) => ({
     })),
 
   setLoadingSessions: (value) => set({ isLoadingSessions: value }),
+  setHasLoadedSessions: (value) => set({ hasLoadedSessions: value }),
   setSending: (value) => set({ isSending: value }),
   setTyping: (value) => set({ isTyping: value }),
 
@@ -118,6 +122,7 @@ export function useChat() {
   const sessions = useChatStore((s) => s.sessions);
   const activeSessionId = useChatStore((s) => s.activeSessionId);
   const isLoadingSessions = useChatStore((s) => s.isLoadingSessions);
+  const hasLoadedSessions = useChatStore((s) => s.hasLoadedSessions);
   const isSending = useChatStore((s) => s.isSending);
   const isTyping = useChatStore((s) => s.isTyping);
 
@@ -128,11 +133,19 @@ export function useChat() {
   const appendMessage = useChatStore((s) => s.appendMessage);
   const updateMessageStatus = useChatStore((s) => s.updateMessageStatus);
   const setLoadingSessions = useChatStore((s) => s.setLoadingSessions);
+  const setHasLoadedSessions = useChatStore((s) => s.setHasLoadedSessions);
   const setSending = useChatStore((s) => s.setSending);
   const setTyping = useChatStore((s) => s.setTyping);
   const closeSidebar = useChatStore((s) => s.closeSidebar);
 
   useEffect(() => {
+    // Only fetch once for the whole app's lifetime — not once per
+    // component that happens to call useChat(). Without this guard,
+    // every time ChatBox/Dashboard mounts (e.g. switching views),
+    // it would re-fetch and overwrite sessions with the seed data,
+    // silently undoing new chats and deletions.
+    if (hasLoadedSessions) return;
+
     let mounted = true;
     setLoadingSessions(true);
     chatService
@@ -141,13 +154,16 @@ export function useChat() {
         if (mounted) setSessions(data);
       })
       .finally(() => {
-        if (mounted) setLoadingSessions(false);
+        if (mounted) {
+          setLoadingSessions(false);
+          setHasLoadedSessions(true);
+        }
       });
     return () => {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hasLoadedSessions]);
 
   const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null;
   const messages = activeSession?.messages ?? [];
