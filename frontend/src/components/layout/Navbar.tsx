@@ -27,10 +27,35 @@ function useTheme() {
   return { isDark, toggle };
 }
 
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export function Navbar() {
   const toggleSidebar = useChatStore((s) => s.toggleSidebar);
+  const currentView = useChatStore((s) => s.currentView);
+  const user = useChatStore((s) => s.user);
   const { activeSession } = useChat();
   const { isDark, toggle } = useTheme();
+
+  const title =
+    currentView === "dashboard"
+      ? "Dashboard"
+      : currentView === "settings"
+      ? "Settings"
+      : activeSession?.title ?? "New conversation";
+
+  const subtitle =
+    currentView === "dashboard"
+      ? "Usage overview"
+      : currentView === "settings"
+      ? "Account & preferences"
+      : "Mock assistant · frontend demo";
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-surface-0/80 px-4 backdrop-blur-md">
@@ -44,10 +69,8 @@ export function Navbar() {
       </button>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-text-primary">
-          {activeSession?.title ?? "New conversation"}
-        </p>
-        <p className="text-[11px] text-text-tertiary">Mock assistant · frontend demo</p>
+        <p className="truncate text-sm font-medium text-text-primary">{title}</p>
+        <p className="text-[11px] text-text-tertiary">{subtitle}</p>
       </div>
 
       <button
@@ -60,7 +83,7 @@ export function Navbar() {
       </button>
 
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-accent-start),var(--color-accent-end))] text-xs font-semibold text-white">
-        AK
+        {initials(user.name)}
       </div>
     </header>
   );

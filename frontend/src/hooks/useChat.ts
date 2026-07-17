@@ -6,6 +6,13 @@ import { chatService } from "@/services/chatService";
 import { generateId } from "@/lib/utils";
 import { ChatMessage, ChatSession } from "@/types/chat";
 
+export type View = "chat" | "dashboard" | "settings";
+
+export interface AppUser {
+  name: string;
+  role: string;
+}
+
 interface ChatStoreState {
   sessions: ChatSession[];
   activeSessionId: string | null;
@@ -13,6 +20,8 @@ interface ChatStoreState {
   isSending: boolean;
   isTyping: boolean;
   sidebarOpen: boolean;
+  currentView: View;
+  user: AppUser;
 
   setSessions: (sessions: ChatSession[]) => void;
   setActiveSessionId: (id: string | null) => void;
@@ -30,15 +39,10 @@ interface ChatStoreState {
   toggleSidebar: () => void;
   openSidebar: () => void;
   closeSidebar: () => void;
+  setView: (view: View) => void;
+  setUser: (user: AppUser) => void;
 }
 
-/**
- * Single store backing all chat state (sessions, active session,
- * loading/sending flags, and sidebar visibility). Components read
- * this directly via `useChatStore` for UI-only state (e.g. Navbar's
- * sidebar toggle), while `useChat()` below composes it with
- * `chatService` for anything that needs a mock network round trip.
- */
 export const useChatStore = create<ChatStoreState>((set) => ({
   sessions: [],
   activeSessionId: null,
@@ -46,16 +50,19 @@ export const useChatStore = create<ChatStoreState>((set) => ({
   isSending: false,
   isTyping: false,
   sidebarOpen: false,
+  currentView: "chat",
+  user: { name: "Aditi Kulkarni", role: "Frontend workspace" },
 
   setSessions: (sessions) =>
     set({ sessions, activeSessionId: sessions[0]?.id ?? null }),
 
-  setActiveSessionId: (id) => set({ activeSessionId: id }),
+  setActiveSessionId: (id) => set({ activeSessionId: id, currentView: "chat" }),
 
   addSession: (session) =>
     set((state) => ({
       sessions: [session, ...state.sessions],
       activeSessionId: session.id,
+      currentView: "chat",
     })),
 
   removeSession: (id) =>
@@ -102,6 +109,9 @@ export const useChatStore = create<ChatStoreState>((set) => ({
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   openSidebar: () => set({ sidebarOpen: true }),
   closeSidebar: () => set({ sidebarOpen: false }),
+
+  setView: (view) => set({ currentView: view }),
+  setUser: (user) => set({ user }),
 }));
 
 export function useChat() {
@@ -168,7 +178,6 @@ export function useChat() {
     async (content: string) => {
       if (!content.trim()) return;
 
-      // Lazily create a session if the user starts typing before one exists.
       let sessionId = activeSessionId;
       if (!sessionId) {
         const session = await chatService.createSession();
@@ -186,8 +195,6 @@ export function useChat() {
       appendMessage(sessionId, userMessage);
       setSending(true);
 
-      // Small delay before showing the typing indicator so it doesn't
-      // flash for instant mock responses.
       const typingDelay = setTimeout(() => setTyping(true), 300);
 
       try {
